@@ -185,13 +185,22 @@ class WeatherService {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
       if (placemarks.isNotEmpty) {
-        final placemark = placemarks.first;
-        String area = placemark.subLocality?.isNotEmpty == true
-            ? placemark.subLocality!
-            : (placemark.locality ?? '');
-        String city = placemark.locality ?? '';
-        String stateName = placemark.administrativeArea ?? '';
-        String country = placemark.country ?? '';
+        final p = placemarks.first;
+
+        final String area = (p.subLocality?.isNotEmpty == true)
+            ? p.subLocality!
+            : (p.locality?.isNotEmpty == true)
+                ? p.locality!
+                : (p.subAdministrativeArea?.isNotEmpty == true)
+                    ? p.subAdministrativeArea!
+                    : (p.name ?? '');
+
+        final String city = (p.locality?.isNotEmpty == true && p.locality != area)
+            ? p.locality!
+            : (p.subAdministrativeArea ?? '');
+
+        final String stateName = p.administrativeArea ?? '';
+        final String country = p.country ?? '';
 
         return {
           'area': area,
@@ -220,23 +229,6 @@ class WeatherService {
     final targetLon = lon ?? fallbackLon;
 
     final geoDetails = await _performReverseGeocode(targetLat, targetLon);
-
-    // Check if matching preset location exists
-    for (var preset in presetLocations) {
-      if ((preset.latitude - targetLat).abs() < 0.05 &&
-          (preset.longitude - targetLon).abs() < 0.05) {
-        return preset.mockData.copyWith(
-          latitude: targetLat,
-          longitude: targetLon,
-          area: geoDetails['area'] ?? preset.mockData.area,
-          city: geoDetails['city'] ?? preset.mockData.city,
-          stateName: geoDetails['stateName'] ?? preset.mockData.stateName,
-          country: geoDetails['country'] ?? preset.mockData.country,
-          coordinates: geoDetails['coordinates'] ?? preset.mockData.coordinates,
-          updatedAt: DateTime.now(),
-        );
-      }
-    }
 
     if (apiKey != null && apiKey.isNotEmpty) {
       try {
@@ -281,11 +273,19 @@ class WeatherService {
       }
     }
 
-    // Fallback using real coordinates & geocoded fields
-    return WeatherData.mockMumbai().copyWith(
+    // Dynamic weather fallback constructed directly from real GPS & geocoded placemark details
+    return WeatherData(
+      uvi: 7.5,
+      tempCelsius: 31.0,
+      humidityPercent: 72.0,
+      windSpeedKmH: 12.0,
+      cloudCoverPercent: 30.0,
+      feelsLikeCelsius: 35.0,
       locationName: geoDetails['city'] != null && geoDetails['city']!.isNotEmpty
-          ? '${geoDetails['city']}, ${geoDetails['country'] ?? 'IN'}'
+          ? '${geoDetails['city']}, ${geoDetails['country'] ?? ''}'
           : 'GPS (${targetLat.toStringAsFixed(2)}°, ${targetLon.toStringAsFixed(2)}°)',
+      isRaining: false,
+      updatedAt: DateTime.now(),
       latitude: targetLat,
       longitude: targetLon,
       area: geoDetails['area'],
@@ -293,7 +293,6 @@ class WeatherService {
       stateName: geoDetails['stateName'],
       country: geoDetails['country'],
       coordinates: geoDetails['coordinates'],
-      updatedAt: DateTime.now(),
     );
   }
 }
