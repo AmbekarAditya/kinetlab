@@ -185,17 +185,13 @@ class WeatherService {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
       if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        String area = (place.subLocality != null && place.subLocality!.isNotEmpty)
-            ? place.subLocality!
-            : ((place.name != null && place.name!.isNotEmpty)
-                ? place.name!
-                : (place.thoroughfare ?? ''));
-        String city = (place.locality != null && place.locality!.isNotEmpty)
-            ? place.locality!
-            : (place.subAdministrativeArea ?? '');
-        String stateName = place.administrativeArea ?? '';
-        String country = place.country ?? '';
+        final placemark = placemarks.first;
+        String area = placemark.subLocality?.isNotEmpty == true
+            ? placemark.subLocality!
+            : (placemark.locality ?? '');
+        String city = placemark.locality ?? '';
+        String stateName = placemark.administrativeArea ?? '';
+        String country = placemark.country ?? '';
 
         return {
           'area': area,
@@ -230,6 +226,8 @@ class WeatherService {
       if ((preset.latitude - targetLat).abs() < 0.05 &&
           (preset.longitude - targetLon).abs() < 0.05) {
         return preset.mockData.copyWith(
+          latitude: targetLat,
+          longitude: targetLon,
           area: geoDetails['area'] ?? preset.mockData.area,
           city: geoDetails['city'] ?? preset.mockData.city,
           stateName: geoDetails['stateName'] ?? preset.mockData.stateName,
@@ -269,6 +267,8 @@ class WeatherService {
             locationName: data['name'] ?? 'Detected Location',
             isRaining: isRaining,
             updatedAt: DateTime.now(),
+            latitude: targetLat,
+            longitude: targetLon,
             area: geoDetails['area'],
             city: geoDetails['city'] ?? data['name'],
             stateName: geoDetails['stateName'],
@@ -286,6 +286,8 @@ class WeatherService {
       locationName: geoDetails['city'] != null && geoDetails['city']!.isNotEmpty
           ? '${geoDetails['city']}, ${geoDetails['country'] ?? 'IN'}'
           : 'GPS (${targetLat.toStringAsFixed(2)}°, ${targetLon.toStringAsFixed(2)}°)',
+      latitude: targetLat,
+      longitude: targetLon,
       area: geoDetails['area'],
       city: geoDetails['city'],
       stateName: geoDetails['stateName'],

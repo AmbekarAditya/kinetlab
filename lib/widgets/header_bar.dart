@@ -201,26 +201,32 @@ class HeaderBar extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          state.weather.primaryLocationTitle,
+                          [
+                            state.weather.area,
+                            state.weather.city,
+                            state.weather.stateName,
+                            state.weather.country,
+                          ]
+                              .where((e) => e != null && e.isNotEmpty)
+                              .join(', '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                             color: const Color(0xFF1F2937),
                           ),
                         ),
-                        if (state.weather.secondaryLocationSubtitle != null)
-                          Text(
-                            state.weather.secondaryLocationSubtitle!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF1F2937).withOpacity(0.65),
-                            ),
+                        Text(
+                          '📍 Lat: ${state.weather.latitude.toStringAsFixed(4)}, Long: ${state.weather.longitude.toStringAsFixed(4)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF1F2937).withOpacity(0.7),
                           ),
+                        ),
                       ],
                     ),
                   ),

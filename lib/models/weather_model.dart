@@ -9,7 +9,9 @@ class WeatherData {
   final bool isRaining;
   final DateTime updatedAt;
 
-  // Reverse Geocoding Location Fields
+  // Reverse Geocoding & GPS Location Fields
+  final double latitude;
+  final double longitude;
   final String? area;
   final String? city;
   final String? stateName;
@@ -26,6 +28,8 @@ class WeatherData {
     required this.locationName,
     required this.isRaining,
     required this.updatedAt,
+    this.latitude = 19.0760,
+    this.longitude = 72.8777,
     this.area,
     this.city,
     this.stateName,
@@ -33,32 +37,19 @@ class WeatherData {
     this.coordinates,
   });
 
-  /// Formatted Primary Title: Area, City
-  String get primaryLocationTitle {
-    final parts = <String>[];
-    if (area != null && area!.isNotEmpty) parts.add(area!);
-    if (city != null && city!.isNotEmpty && city != area) parts.add(city!);
-
-    if (parts.isNotEmpty) {
-      return parts.join(', ');
+  /// Location Title Text: [area, city, stateName, country].where((e) => e != null && e.isNotEmpty).join(', ')
+  String get fullLocationTitle {
+    final list = [area, city, stateName, country];
+    final validParts = list.where((e) => e != null && e.isNotEmpty).toList();
+    if (validParts.isNotEmpty) {
+      return validParts.join(', ');
     }
     return locationName;
   }
 
-  /// Formatted Subtitle: State, Country • (Lat: XX.XXXX, Long: YY.YYYY)
-  String? get secondaryLocationSubtitle {
-    final locationParts = <String>[];
-    if (stateName != null && stateName!.isNotEmpty) locationParts.add(stateName!);
-    if (country != null && country!.isNotEmpty) locationParts.add(country!);
-
-    String locationStr = locationParts.join(', ');
-    if (coordinates != null && coordinates!.isNotEmpty) {
-      if (locationStr.isNotEmpty) {
-        return '$locationStr • ($coordinates)';
-      }
-      return '($coordinates)';
-    }
-    return locationStr.isNotEmpty ? locationStr : null;
+  /// Location Coordinates Subtitle Text: '📍 Lat: ${latitude.toStringAsFixed(4)}, Long: ${longitude.toStringAsFixed(4)}'
+  String get formattedCoordinatesSubtitle {
+    return '📍 Lat: ${latitude.toStringAsFixed(4)}, Long: ${longitude.toStringAsFixed(4)}';
   }
 
   factory WeatherData.mockMumbai() {
@@ -72,6 +63,8 @@ class WeatherData {
       locationName: 'Mumbai, IN',
       isRaining: false,
       updatedAt: DateTime.now(),
+      latitude: 19.0760,
+      longitude: 72.8777,
       area: 'Bandra',
       city: 'Mumbai',
       stateName: 'Maharashtra',
@@ -90,6 +83,8 @@ class WeatherData {
     String? locationName,
     bool? isRaining,
     DateTime? updatedAt,
+    double? latitude,
+    double? longitude,
     String? area,
     String? city,
     String? stateName,
@@ -106,6 +101,8 @@ class WeatherData {
       locationName: locationName ?? this.locationName,
       isRaining: isRaining ?? this.isRaining,
       updatedAt: updatedAt ?? this.updatedAt,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       area: area ?? this.area,
       city: city ?? this.city,
       stateName: stateName ?? this.stateName,
