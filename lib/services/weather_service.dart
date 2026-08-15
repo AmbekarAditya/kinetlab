@@ -193,7 +193,9 @@ class WeatherService {
                 ? p.locality!
                 : (p.subAdministrativeArea?.isNotEmpty == true)
                     ? p.subAdministrativeArea!
-                    : (p.name ?? '');
+                    : ((p.name?.isNotEmpty == true && p.name != p.postalCode)
+                        ? p.name!
+                        : 'Current Location');
 
         final String city = (p.locality?.isNotEmpty == true && p.locality != area)
             ? p.locality!
@@ -215,6 +217,7 @@ class WeatherService {
     }
 
     return {
+      'area': 'Current Location',
       'coordinates': coordStr,
     };
   }

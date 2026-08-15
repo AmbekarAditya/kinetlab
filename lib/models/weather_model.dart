@@ -65,7 +65,7 @@ class WeatherData {
       updatedAt: DateTime.now(),
       latitude: 19.0760,
       longitude: 72.8777,
-      area: 'Bandra',
+      area: 'Mumbai Beach',
       city: 'Mumbai',
       stateName: 'Maharashtra',
       country: 'India',
