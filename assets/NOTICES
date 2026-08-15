@@ -6881,6 +6881,10 @@ prospectively choose to deem waived or otherwise exclude such Section(s) of
 the License, but only in their entirety and only with respect to the Combined
 Software.
 --------------------------------------------------------------------------------
+geocoding
+geocoding_android
+geocoding_ios
+geocoding_platform_interface
 geolocator
 geolocator_android
 geolocator_apple
