@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>kinet needs access to your location to fetch real-time hyper-local UV index and environmental stress factors for sunscreen reapplication timing.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Kinetlab</string>
 	<key>CFBundleExecutable</key>
