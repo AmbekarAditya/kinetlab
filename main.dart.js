@@ -64672,7 +64672,7 @@ A.adQ.prototype={
 $1(a){return $.ap0()},
 $S:426}
 A.ada.prototype={
-$1(a){var s=a.lo($.arj(),t.HI),r=a.lo($.arf(),t.RP),q=A.kV("Bandra","Mumbai",25,"19.0760, 72.8777","India",37,78,!1,19.076,"Mumbai, IN",72.8777,"Maharashtra",32.5,new A.cP(Date.now(),0,!1),8.4,14.2),p=A.adf(q.c,!0,!0,q.w,q.b,q.a),o=p*60
+$1(a){var s=a.lo($.arj(),t.HI),r=a.lo($.arf(),t.RP),q=A.kV("Mumbai Beach","Mumbai",25,"19.0760, 72.8777","India",37,78,!1,19.076,"Mumbai, IN",72.8777,"Maharashtra",32.5,new A.cP(Date.now(),0,!1),8.4,14.2),p=A.adf(q.c,!0,!0,q.w,q.b,q.a),o=p*60
 o=new A.h5(s,r,new A.mE(t.As),new A.h6(q,!0,!0,!1,null,null,o,o,p,!1))
 o.jw()
 return o},
@@ -64939,7 +64939,7 @@ break
 case 3:s=2
 break
 case 6:k=t.N
-q=A.az(["coordinates",j],k,k)
+q=A.az(["area","Current Location","coordinates",j],k,k)
 s=1
 break
 case 1:return A.Q(q,r)
