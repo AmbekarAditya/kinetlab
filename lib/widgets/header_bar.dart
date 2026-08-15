@@ -162,7 +162,7 @@ class HeaderBar extends ConsumerWidget {
             child: GestureDetector(
               onTap: () => _showLocationPicker(context, ref),
               child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.92),
                 borderRadius: BorderRadius.circular(20),
@@ -209,10 +209,11 @@ class HeaderBar extends ConsumerWidget {
                           ]
                               .where((e) => e != null && e.isNotEmpty)
                               .join(', '),
-                          maxLines: 1,
+                          maxLines: 2,
+                          softWrap: true,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
-                            fontSize: 13,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF1F2937),
                           ),
@@ -222,7 +223,7 @@ class HeaderBar extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
-                            fontSize: 11,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF1F2937).withOpacity(0.7),
                           ),
