@@ -179,9 +179,11 @@ class WeatherService {
     }
   }
 
-  /// Perform reverse geocoding to extract Area, City, State, Country, and Lat/Long coordinates.
+  /// Perform reverse geocoding with native placemark lookup and OpenStreetMap Nominatim HTTP fallback.
   Future<Map<String, String>> _performReverseGeocode(double lat, double lon) async {
     final String coordStr = '${lat.toStringAsFixed(4)}, ${lon.toStringAsFixed(4)}';
+
+    // 1. Try Native Geocoding
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
       if (placemarks.isNotEmpty) {
@@ -189,23 +191,75 @@ class WeatherService {
 
         final String area = (p.subLocality?.isNotEmpty == true)
             ? p.subLocality!
-            : (p.locality?.isNotEmpty == true)
-                ? p.locality!
-                : (p.subAdministrativeArea?.isNotEmpty == true)
-                    ? p.subAdministrativeArea!
-                    : ((p.name?.isNotEmpty == true && p.name != p.postalCode)
-                        ? p.name!
-                        : 'Current Location');
+            : (p.thoroughfare?.isNotEmpty == true)
+                ? p.thoroughfare!
+                : (p.name?.isNotEmpty == true)
+                    ? p.name!
+                    : '';
 
-        final String city = (p.locality?.isNotEmpty == true && p.locality != area)
+        final String city = (p.locality?.isNotEmpty == true)
             ? p.locality!
-            : (p.subAdministrativeArea ?? '');
+            : (p.subAdministrativeArea?.isNotEmpty == true)
+                ? p.subAdministrativeArea!
+                : '';
 
         final String stateName = p.administrativeArea ?? '';
         final String country = p.country ?? '';
 
+        if (area.isNotEmpty || city.isNotEmpty) {
+          return {
+            'area': area.isNotEmpty ? area : city,
+            'city': city,
+            'stateName': stateName,
+            'country': country,
+            'coordinates': coordStr,
+          };
+        }
+      }
+    } catch (e) {
+      debugPrint('Native reverse geocoding error: $e');
+    }
+
+    // 2. HTTP Fallback: OpenStreetMap Nominatim (reliable across Web & Native)
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lon&zoom=14&addressdetails=1',
+      );
+      final response = await http.get(url, headers: {
+        'User-Agent': 'kinet-app',
+      }).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final address = data['address'] as Map<String, dynamic>? ?? {};
+
+        final String area = (address['suburb']?.toString().isNotEmpty == true)
+            ? address['suburb']!.toString()
+            : (address['neighbourhood']?.toString().isNotEmpty == true)
+                ? address['neighbourhood']!.toString()
+                : (address['residential']?.toString().isNotEmpty == true)
+                    ? address['residential']!.toString()
+                    : (address['road']?.toString().isNotEmpty == true)
+                        ? address['road']!.toString()
+                        : '';
+
+        final String city = (address['city']?.toString().isNotEmpty == true)
+            ? address['city']!.toString()
+            : (address['town']?.toString().isNotEmpty == true)
+                ? address['town']!.toString()
+                : (address['village']?.toString().isNotEmpty == true)
+                    ? address['village']!.toString()
+                    : (address['municipality']?.toString().isNotEmpty == true)
+                        ? address['municipality']!.toString()
+                        : (address['county']?.toString().isNotEmpty == true)
+                            ? address['county']!.toString()
+                            : '';
+
+        final String stateName = address['state']?.toString() ?? address['region']?.toString() ?? '';
+        final String country = address['country']?.toString() ?? '';
+
         return {
-          'area': area,
+          'area': area.isNotEmpty ? area : (city.isNotEmpty ? city : 'Current Location'),
           'city': city,
           'stateName': stateName,
           'country': country,
@@ -213,7 +267,7 @@ class WeatherService {
         };
       }
     } catch (e) {
-      debugPrint('Reverse geocoding error: $e');
+      debugPrint('Nominatim reverse geocoding error: $e');
     }
 
     return {
