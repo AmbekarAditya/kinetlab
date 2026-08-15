@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import '../models/weather_model.dart';
@@ -24,6 +25,11 @@ class WeatherService {
         locationName: 'Mumbai, IN',
         isRaining: false,
         updatedAt: DateTime.now(),
+        area: 'Bandra West',
+        city: 'Mumbai',
+        stateName: 'Maharashtra',
+        country: 'India',
+        coordinates: '19.0760, 72.8777',
       ),
     ),
     PresetLocation(
@@ -41,6 +47,11 @@ class WeatherService {
         locationName: 'Miami Beach, US',
         isRaining: false,
         updatedAt: DateTime.now(),
+        area: 'South Beach',
+        city: 'Miami Beach',
+        stateName: 'Florida',
+        country: 'United States',
+        coordinates: '25.7617, -80.1918',
       ),
     ),
     PresetLocation(
@@ -58,6 +69,11 @@ class WeatherService {
         locationName: 'Sydney, AU',
         isRaining: false,
         updatedAt: DateTime.now(),
+        area: 'Circular Quay',
+        city: 'Sydney',
+        stateName: 'New South Wales',
+        country: 'Australia',
+        coordinates: '-33.8688, 151.2093',
       ),
     ),
     PresetLocation(
@@ -75,6 +91,11 @@ class WeatherService {
         locationName: 'Boulder, CO',
         isRaining: false,
         updatedAt: DateTime.now(),
+        area: 'Flatirons District',
+        city: 'Boulder',
+        stateName: 'Colorado',
+        country: 'United States',
+        coordinates: '40.0150, -105.2705',
       ),
     ),
     PresetLocation(
@@ -92,6 +113,11 @@ class WeatherService {
         locationName: 'Tokyo, JP',
         isRaining: false,
         updatedAt: DateTime.now(),
+        area: 'Shinjuku',
+        city: 'Tokyo',
+        stateName: 'Kanto',
+        country: 'Japan',
+        coordinates: '35.6762, 139.6503',
       ),
     ),
     PresetLocation(
@@ -100,7 +126,7 @@ class WeatherService {
       latitude: 45.9237,
       longitude: 6.8694,
       mockData: WeatherData(
-        uvi: 11.5, // Alpine high UV reflection
+        uvi: 11.5,
         tempCelsius: 21.0,
         humidityPercent: 45.0,
         windSpeedKmH: 15.0,
@@ -109,12 +135,16 @@ class WeatherService {
         locationName: 'Chamonix, FR',
         isRaining: false,
         updatedAt: DateTime.now(),
+        area: 'Mont-Blanc Valley',
+        city: 'Chamonix-Mont-Blanc',
+        stateName: 'Auvergne-Rhône-Alpes',
+        country: 'France',
+        coordinates: '45.9237, 6.8694',
       ),
     ),
   ];
 
   /// Request geolocation permission and fetch position.
-  /// Defaults to Mumbai if permission denied, restricted, or disabled.
   Future<Position?> getCurrentPosition() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -149,8 +179,42 @@ class WeatherService {
     }
   }
 
-  /// Fetches weather and UV data for given coordinates.
-  /// Uses OpenWeatherMap endpoint if available, otherwise returns rich simulated weather.
+  /// Perform reverse geocoding to extract Area, City, State, Country, and Lat/Long coordinates.
+  Future<Map<String, String>> _performReverseGeocode(double lat, double lon) async {
+    final String coordStr = '${lat.toStringAsFixed(4)}, ${lon.toStringAsFixed(4)}';
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        String area = (place.subLocality != null && place.subLocality!.isNotEmpty)
+            ? place.subLocality!
+            : ((place.name != null && place.name!.isNotEmpty)
+                ? place.name!
+                : (place.thoroughfare ?? ''));
+        String city = (place.locality != null && place.locality!.isNotEmpty)
+            ? place.locality!
+            : (place.subAdministrativeArea ?? '');
+        String stateName = place.administrativeArea ?? '';
+        String country = place.country ?? '';
+
+        return {
+          'area': area,
+          'city': city,
+          'stateName': stateName,
+          'country': country,
+          'coordinates': coordStr,
+        };
+      }
+    } catch (e) {
+      debugPrint('Reverse geocoding error: $e');
+    }
+
+    return {
+      'coordinates': coordStr,
+    };
+  }
+
+  /// Fetches weather and UV data for given coordinates with reverse geocoded details.
   Future<WeatherData> fetchWeatherData({
     double? lat,
     double? lon,
@@ -159,11 +223,20 @@ class WeatherService {
     final targetLat = lat ?? fallbackLat;
     final targetLon = lon ?? fallbackLon;
 
+    final geoDetails = await _performReverseGeocode(targetLat, targetLon);
+
     // Check if matching preset location exists
     for (var preset in presetLocations) {
-      if ((preset.latitude - targetLat).abs() < 0.1 &&
-          (preset.longitude - targetLon).abs() < 0.1) {
-        return preset.mockData.copyWith(updatedAt: DateTime.now());
+      if ((preset.latitude - targetLat).abs() < 0.05 &&
+          (preset.longitude - targetLon).abs() < 0.05) {
+        return preset.mockData.copyWith(
+          area: geoDetails['area'] ?? preset.mockData.area,
+          city: geoDetails['city'] ?? preset.mockData.city,
+          stateName: geoDetails['stateName'] ?? preset.mockData.stateName,
+          country: geoDetails['country'] ?? preset.mockData.country,
+          coordinates: geoDetails['coordinates'] ?? preset.mockData.coordinates,
+          updatedAt: DateTime.now(),
+        );
       }
     }
 
@@ -182,7 +255,6 @@ class WeatherService {
           final mainWeather = weatherList.isNotEmpty ? weatherList.first['main'] : '';
           final bool isRaining = mainWeather.toString().toLowerCase().contains('rain');
 
-          // Fetch UVI from OpenWeather OneCall or fallback calculate estimate
           double temp = (main['temp'] as num?)?.toDouble() ?? 30.0;
           double humidity = (main['humidity'] as num?)?.toDouble() ?? 60.0;
           double uviEstimate = (temp > 30 ? 8.5 : 5.5);
@@ -197,6 +269,11 @@ class WeatherService {
             locationName: data['name'] ?? 'Detected Location',
             isRaining: isRaining,
             updatedAt: DateTime.now(),
+            area: geoDetails['area'],
+            city: geoDetails['city'] ?? data['name'],
+            stateName: geoDetails['stateName'],
+            country: geoDetails['country'],
+            coordinates: geoDetails['coordinates'],
           );
         }
       } catch (e) {
@@ -204,15 +281,17 @@ class WeatherService {
       }
     }
 
-    // Fallback using real coordinates if provided
-    if (lat != null && lon != null) {
-      return WeatherData.mockMumbai().copyWith(
-        locationName: 'GPS (${lat.toStringAsFixed(2)}°, ${lon.toStringAsFixed(2)}°)',
-        updatedAt: DateTime.now(),
-      );
-    }
-
-    // Default Fallback: Mumbai, IN
-    return WeatherData.mockMumbai().copyWith(updatedAt: DateTime.now());
+    // Fallback using real coordinates & geocoded fields
+    return WeatherData.mockMumbai().copyWith(
+      locationName: geoDetails['city'] != null && geoDetails['city']!.isNotEmpty
+          ? '${geoDetails['city']}, ${geoDetails['country'] ?? 'IN'}'
+          : 'GPS (${targetLat.toStringAsFixed(2)}°, ${targetLon.toStringAsFixed(2)}°)',
+      area: geoDetails['area'],
+      city: geoDetails['city'],
+      stateName: geoDetails['stateName'],
+      country: geoDetails['country'],
+      coordinates: geoDetails['coordinates'],
+      updatedAt: DateTime.now(),
+    );
   }
 }

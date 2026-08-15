@@ -154,12 +154,14 @@ class HeaderBar extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
           // Location Selector Chip
-          GestureDetector(
-            onTap: () => _showLocationPicker(context, ref),
-            child: Container(
+          Flexible(
+            fit: FlexFit.loose,
+            child: GestureDetector(
+              onTap: () => _showLocationPicker(context, ref),
+              child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.92),
@@ -177,6 +179,7 @@ class HeaderBar extends ConsumerWidget {
                 ],
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   state.isLoadingLocation
                       ? const SizedBox(
@@ -192,12 +195,33 @@ class HeaderBar extends ConsumerWidget {
                           style: TextStyle(fontSize: 14),
                         ),
                   const SizedBox(width: 6),
-                  Text(
-                    state.weather.locationName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1F2937),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          state.weather.primaryLocationTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
+                        if (state.weather.secondaryLocationSubtitle != null)
+                          Text(
+                            state.weather.secondaryLocationSubtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF1F2937).withOpacity(0.65),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -210,7 +234,8 @@ class HeaderBar extends ConsumerWidget {
               ),
             ),
           ),
-        ],
+        ),
+      ],
       ),
     );
   }

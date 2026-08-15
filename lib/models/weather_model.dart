@@ -9,6 +9,13 @@ class WeatherData {
   final bool isRaining;
   final DateTime updatedAt;
 
+  // Reverse Geocoding Location Fields
+  final String? area;
+  final String? city;
+  final String? stateName;
+  final String? country;
+  final String? coordinates;
+
   const WeatherData({
     required this.uvi,
     required this.tempCelsius,
@@ -19,7 +26,40 @@ class WeatherData {
     required this.locationName,
     required this.isRaining,
     required this.updatedAt,
+    this.area,
+    this.city,
+    this.stateName,
+    this.country,
+    this.coordinates,
   });
+
+  /// Formatted Primary Title: Area, City
+  String get primaryLocationTitle {
+    final parts = <String>[];
+    if (area != null && area!.isNotEmpty) parts.add(area!);
+    if (city != null && city!.isNotEmpty && city != area) parts.add(city!);
+
+    if (parts.isNotEmpty) {
+      return parts.join(', ');
+    }
+    return locationName;
+  }
+
+  /// Formatted Subtitle: State, Country • (Lat: XX.XXXX, Long: YY.YYYY)
+  String? get secondaryLocationSubtitle {
+    final locationParts = <String>[];
+    if (stateName != null && stateName!.isNotEmpty) locationParts.add(stateName!);
+    if (country != null && country!.isNotEmpty) locationParts.add(country!);
+
+    String locationStr = locationParts.join(', ');
+    if (coordinates != null && coordinates!.isNotEmpty) {
+      if (locationStr.isNotEmpty) {
+        return '$locationStr • ($coordinates)';
+      }
+      return '($coordinates)';
+    }
+    return locationStr.isNotEmpty ? locationStr : null;
+  }
 
   factory WeatherData.mockMumbai() {
     return WeatherData(
@@ -32,6 +72,11 @@ class WeatherData {
       locationName: 'Mumbai, IN',
       isRaining: false,
       updatedAt: DateTime.now(),
+      area: 'Bandra',
+      city: 'Mumbai',
+      stateName: 'Maharashtra',
+      country: 'India',
+      coordinates: '19.0760, 72.8777',
     );
   }
 
@@ -45,6 +90,11 @@ class WeatherData {
     String? locationName,
     bool? isRaining,
     DateTime? updatedAt,
+    String? area,
+    String? city,
+    String? stateName,
+    String? country,
+    String? coordinates,
   }) {
     return WeatherData(
       uvi: uvi ?? this.uvi,
@@ -56,6 +106,11 @@ class WeatherData {
       locationName: locationName ?? this.locationName,
       isRaining: isRaining ?? this.isRaining,
       updatedAt: updatedAt ?? this.updatedAt,
+      area: area ?? this.area,
+      city: city ?? this.city,
+      stateName: stateName ?? this.stateName,
+      country: country ?? this.country,
+      coordinates: coordinates ?? this.coordinates,
     );
   }
 }
